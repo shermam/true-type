@@ -3,24 +3,24 @@
 import { TrueTypeFont } from "./trueTypeFont.js";
 
 export function ShowTtfFile(arrayBuffer) {
-    var font = new TrueTypeFont(arrayBuffer);
+    const font = new TrueTypeFont(arrayBuffer);
 
-    var width = font.xMax - font.xMin;
-    var height = font.yMax - font.yMin;
-    var scale = 64 / font.unitsPerEm;
+    const width = font.xMax - font.xMin;
+    const height = font.yMax - font.yMin;
+    const scale = 64 / font.unitsPerEm;
 
-    var container = document.getElementById("font-container");
+    const container = document.getElementById("font-container");
 
     while (container.firstChild) {
         container.removeChild(container.firstChild);
     }
 
-    for (var i = 0; i < font.length; i++) {
-        var canvas = document.createElement("canvas");
+    for (let i = 0; i < font.length; i++) {
+        const canvas = document.createElement("canvas");
         canvas.style.border = "1px solid gray";
         canvas.width = width * scale;
         canvas.height = height * scale;
-        var ctx = canvas.getContext("2d");
+        const ctx = canvas.getContext("2d");
         ctx.scale(scale, -scale);
         ctx.translate(-font.xMin, -font.yMin - height);
         ctx.fillStyle = "#FFFF00";

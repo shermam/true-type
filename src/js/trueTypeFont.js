@@ -13,15 +13,15 @@ export class TrueTypeFont {
     }
 
     readOffsetTables(file) {
-        var tables = {};
+        const tables = {};
         this.scalarType = file.getUint32();
-        var numTables = file.getUint16();
+        const numTables = file.getUint16();
         this.searchRange = file.getUint16();
         this.entrySelector = file.getUint16();
         this.rangeShift = file.getUint16();
 
-        for (var i = 0; i < numTables; i++) {
-            var tag = file.getString(4);
+        for (let i = 0; i < numTables; i++) {
+            const tag = file.getString(4);
             tables[tag] = {
                 checksum: file.getUint32(),
                 offset: file.getUint32(),
@@ -38,9 +38,9 @@ export class TrueTypeFont {
     }
 
     calculateTableChecksum(file, offset, length) {
-        var old = file.seek(offset);
-        var sum = 0;
-        var nlongs = ((length + 3) / 4) | 0;
+        const old = file.seek(offset);
+        let sum = 0;
+        let nlongs = ((length + 3) / 4) | 0;
         while (nlongs--) {
             sum = (sum + file.getUint32() & 0xffffffff) >>> 0;
         }
@@ -75,17 +75,18 @@ export class TrueTypeFont {
 
     glyphCount() {
         assert("maxp" in this.tables);
-        var old = this.file.seek(this.tables["maxp"].offset + 4);
-        var count = this.file.getUint16();
+        const old = this.file.seek(this.tables["maxp"].offset + 4);
+        const count = this.file.getUint16();
         this.file.seek(old);
         return count;
     }
 
     getGlyphOffset(index) {
         assert("loca" in this.tables);
-        var table = this.tables["loca"];
-        var file = this.file;
-        var offset, old;
+        const table = this.tables["loca"];
+        const file = this.file;
+        let offset;
+        let old;
 
         if (this.indexToLocFormat === 1) {
             old = file.seek(table.offset + index * 4);
@@ -102,11 +103,11 @@ export class TrueTypeFont {
 
     readGlyphs(file) {
         assert("glyf" in this.tables);
-        var glyphTable = this.tables["glyf"];
+        const glyphTable = this.tables["glyf"];
 
         file.seek(glyphTable.offset);
 
-        var glyphs = [];
+        const glyphs = [];
 
         while (file.tell() < glyphTable.offset + glyphTable.length) {
             glyphs.push(this.readGlyph(file));
@@ -120,8 +121,8 @@ export class TrueTypeFont {
     }
 
     readGlyph(index) {
-        var offset = this.getGlyphOffset(index);
-        var file = this.file;
+        const offset = this.getGlyphOffset(index);
+        const file = this.file;
 
         if (offset >= this.tables["glyf"].offset + this.tables["glyf"].length) {
             return null;
@@ -132,7 +133,7 @@ export class TrueTypeFont {
 
         file.seek(offset);
 
-        var glyph = {
+        const glyph = {
             numberOfContours: file.getInt16(),
             xMin: file.getFword(),
             yMin: file.getFword(),
@@ -153,18 +154,18 @@ export class TrueTypeFont {
 
     readSimpleGlyph(file, glyph) {
 
-        var ON_CURVE = 1,
-            X_IS_BYTE = 2,
-            Y_IS_BYTE = 4,
-            REPEAT = 8,
-            X_DELTA = 16,
-            Y_DELTA = 32;
+        const ON_CURVE = 1;
+        const X_IS_BYTE = 2;
+        const Y_IS_BYTE = 4;
+        const REPEAT = 8;
+        const X_DELTA = 16;
+        const Y_DELTA = 32;
 
         glyph.type = "simple";
         glyph.contourEnds = [];
-        var points = glyph.points = [];
+        const points = glyph.points = [];
 
-        for (var i = 0; i < glyph.numberOfContours; i++) {
+        for (let i = 0; i < glyph.numberOfContours; i++) {
             glyph.contourEnds.push(file.getUint16());
         }
 
@@ -175,19 +176,19 @@ export class TrueTypeFont {
             return;
         }
 
-        var numPoints = Math.max.apply(null, glyph.contourEnds) + 1;
+        const numPoints = Math.max.apply(null, glyph.contourEnds) + 1;
 
-        var flags = [];
+        const flags = [];
 
-        for (i = 0; i < numPoints; i++) {
-            var flag = file.getUint8();
+        for (let i = 0; i < numPoints; i++) {
+            const flag = file.getUint8();
             flags.push(flag);
             points.push({
                 onCurve: (flag & ON_CURVE) > 0
             });
 
             if (flag & REPEAT) {
-                var repeatCount = file.getUint8();
+                let repeatCount = file.getUint8();
                 assert(repeatCount > 0);
                 i += repeatCount;
                 while (repeatCount--) {
@@ -200,10 +201,10 @@ export class TrueTypeFont {
         }
 
         function readCoords(name, byteFlag, deltaFlag, min, max) {
-            var value = 0;
+            let value = 0;
 
-            for (var i = 0; i < numPoints; i++) {
-                var flag = flags[i];
+            for (let i = 0; i < numPoints; i++) {
+                const flag = flags[i];
                 if (flag & byteFlag) {
                     if (flag & deltaFlag) {
                         value += file.getUint8();
@@ -225,7 +226,7 @@ export class TrueTypeFont {
     }
 
     readCompoundGlyph(file, glyph) {
-        var ARG_1_AND_2_ARE_WORDS = 1,
+        const ARG_1_AND_2_ARE_WORDS = 1,
             ARGS_ARE_XY_VALUES = 2,
             ROUND_XY_TO_GRID = 4,
             WE_HAVE_A_SCALE = 8,
@@ -240,12 +241,13 @@ export class TrueTypeFont {
         glyph.type = "compound";
         glyph.components = [];
 
-        var flags = MORE_COMPONENTS;
+        let flags = MORE_COMPONENTS;
         while (flags & MORE_COMPONENTS) {
-            var arg1, arg2;
+            let arg1;
+            let arg2;
 
             flags = file.getUint16();
-            var component = {
+            const component = {
                 glyphIndex: file.getUint16(),
                 matrix: {
                     a: 1, b: 0, c: 0, d: 1, e: 0, f: 0
@@ -291,18 +293,18 @@ export class TrueTypeFont {
 
     drawGlyph(index, ctx) {
 
-        var glyph = this.readGlyph(index);
+        const glyph = this.readGlyph(index);
 
         if (glyph === null || glyph.type !== "simple") {
             return false;
         }
 
-        var p = 0,
-            c = 0,
-            first = 1;
+        let p = 0;
+        let c = 0;
+        let first = 1;
 
         while (p < glyph.points.length) {
-            var point = glyph.points[p];
+            const point = glyph.points[p];
             if (first === 1) {
                 ctx.moveTo(point.x, point.y);
                 first = 0;
@@ -322,7 +324,3 @@ export class TrueTypeFont {
     }
 
 }
-
-
-
-

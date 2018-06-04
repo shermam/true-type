@@ -11,7 +11,7 @@ export class BinaryReader {
 
     seek(pos) {
         assert(pos >= 0 && pos <= this.data.length);
-        var oldPos = this.pos;
+        const oldPos = this.pos;
         this.pos = pos;
         return oldPos;
     }
@@ -34,7 +34,7 @@ export class BinaryReader {
     }
 
     getInt16() {
-        var result = this.getUint16();
+        let result = this.getUint16();
         if (result & 0x8000) {
             result -= (1 << 16);
         }
@@ -61,16 +61,16 @@ export class BinaryReader {
     }
 
     getString(length) {
-        var result = "";
-        for (var i = 0; i < length; i++) {
+        let result = "";
+        for (let i = 0; i < length; i++) {
             result += String.fromCharCode(this.getUint8());
         }
         return result;
     }
 
     getDate() {
-        var macTime = this.getUint32() * 0x100000000 + this.getUint32();
-        var utcTime = macTime * 1000 + Date.UTC(1904, 1, 1);
+        const macTime = this.getUint32() * 0x100000000 + this.getUint32();
+        const utcTime = macTime * 1000 + Date.UTC(1904, 1, 1);
         return new Date(utcTime);
     }
 }
