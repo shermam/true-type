@@ -2,6 +2,7 @@
 
 import { assert } from "./assert.js";
 import { BinaryReader } from "./binaryReader.js";
+import { readCoordsFactory } from "./readCoords.js";
 
 export class TrueTypeFont {
 
@@ -161,9 +162,10 @@ export class TrueTypeFont {
         const X_DELTA = 16;
         const Y_DELTA = 32;
 
+        const points = glyph.points = [];
+
         glyph.type = "simple";
         glyph.contourEnds = [];
-        const points = glyph.points = [];
 
         for (let i = 0; i < glyph.numberOfContours; i++) {
             glyph.contourEnds.push(file.getUint16());
@@ -177,8 +179,9 @@ export class TrueTypeFont {
         }
 
         const numPoints = Math.max.apply(null, glyph.contourEnds) + 1;
-
         const flags = [];
+        const readCoords = readCoordsFactory(numPoints, file, flags, points);
+
 
         for (let i = 0; i < numPoints; i++) {
             const flag = file.getUint8();
@@ -197,27 +200,6 @@ export class TrueTypeFont {
                         onCurve: (flag & ON_CURVE) > 0
                     });
                 }
-            }
-        }
-
-        function readCoords(name, byteFlag, deltaFlag, min, max) {
-            let value = 0;
-
-            for (let i = 0; i < numPoints; i++) {
-                const flag = flags[i];
-                if (flag & byteFlag) {
-                    if (flag & deltaFlag) {
-                        value += file.getUint8();
-                    } else {
-                        value -= file.getUint8();
-                    }
-                } else if (~flag & deltaFlag) {
-                    value += file.getInt16();
-                } else {
-                    // value is unchanged.
-                }
-
-                points[i][name] = value;
             }
         }
 
@@ -299,25 +281,30 @@ export class TrueTypeFont {
             return false;
         }
 
-        let p = 0;
-        let c = 0;
-        let first = 1;
+        let contourEnd = 0;
+        let isFirst = true;
+        let firstPoint = null;
 
-        while (p < glyph.points.length) {
-            const point = glyph.points[p];
-            if (first === 1) {
+
+        for (let i = 0; i < glyph.points.length; i++) {
+            const point = glyph.points[i];
+
+            if (isFirst) {
                 ctx.moveTo(point.x, point.y);
-                first = 0;
+                firstPoint = point;
+                isFirst = false;
             } else {
                 ctx.lineTo(point.x, point.y);
             }
 
-            if (p === glyph.contourEnds[c]) {
-                c += 1;
-                first = 1;
-            }
+            if (i === glyph.contourEnds[contourEnd]) {
+                contourEnd++;
+                isFirst = true;
 
-            p += 1;
+                if (firstPoint !== null) {
+                    ctx.lineTo(firstPoint.x, firstPoint.y);
+                }
+            }
         }
 
         return true;
