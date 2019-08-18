@@ -5,6 +5,6 @@
 
 import { ShowTtfFile } from "./showTtfFile.js";
 
-fetch('Arial.ttf')
-    .then(r => r.arrayBuffer())
-    .then(ShowTtfFile);
+fetch("comic.ttf")
+  .then(r => r.arrayBuffer())
+  .then(ShowTtfFile);
